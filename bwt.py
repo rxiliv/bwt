@@ -1,4 +1,6 @@
-if __name__ == "__main__":
+# --- Algoritmo della Trasformata di Burrows-Wheeler ---
+
+def bwt(string: str):
     # Richiesta della stringa in input
     stringa = str(input("Inserisci una stringa: "))
 
@@ -6,7 +8,7 @@ if __name__ == "__main__":
     stringa += '$'
 
     # Calcolo di tutte le possibili rotazioni verso destra della stringa
-    shift = list()
+    shift = [stringa]
 
     while stringa[0] != '$':
         stringa += stringa[0]
@@ -14,11 +16,16 @@ if __name__ == "__main__":
         shift.append(stringa)
 
     # Riordine delle rotazioni lessicograficamente
-    for i, parola in enumerate(shift):
+    for i in range(len(shift)):
         index = i
-        for j in range(len(shift) - i):
-            if shift[j] < parola:
+        for j in range(i + 1, len(shift)):
+            if shift[j] < shift[index]:
                 index = j
-        temp = parola
-        shift[i] = shift[j]
-        shift[j] = temp
+        shift[i], shift[j] = shift[j], shift[i]
+
+    # Estrapolazione della trasformata
+    trasformata = ""
+    for parola in shift:
+        trasformata += parola[len(parola) - 1]
+    
+    return trasformata
