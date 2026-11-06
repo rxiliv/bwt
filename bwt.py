@@ -1,21 +1,21 @@
-# --- Algoritmo della Trasformata di Burrows-Wheeler ---
+# --- Burrows-Wheeler Transform Algorithm ---
 
 def bwt(string: str):
-    # Richiesta della stringa in input
-    stringa = str(input("Inserisci una stringa: "))
+    # String input request
+    string = str(input("Inserisci una stringa: "))
 
-    # Aggiunta di '$' alla fine della stringa
-    stringa += '$'
+    # Add '$' at the end of the string
+    string += '$'
 
-    # Calcolo di tutte le possibili rotazioni verso destra della stringa
-    shift = [stringa]
+    # Calculate all the possible rotations to the right
+    shift = [string]
 
-    while stringa[0] != '$':
-        stringa += stringa[0]
-        stringa = stringa[1::]
-        shift.append(stringa)
+    while string[0] != '$':
+        string += string[0]
+        string = string[1::]
+        shift.append(string)
 
-    # Riordine delle rotazioni lessicograficamente
+    # Lexicographically sort rotations 
     for i in range(len(shift)):
         index = i
         for j in range(i + 1, len(shift)):
@@ -23,9 +23,9 @@ def bwt(string: str):
                 index = j
         shift[i], shift[j] = shift[j], shift[i]
 
-    # Estrapolazione della trasformata
-    trasformata = ""
-    for parola in shift:
-        trasformata += parola[len(parola) - 1]
+    # Resolute transform
+    transform = ""
+    for temp in shift:
+        transform += temp[len(temp) - 1]
     
-    return trasformata
+    return transform
