@@ -9,8 +9,6 @@ def calculate_rotations(string: str) -> list:
         string = string[1::] + string[0]
         rotations.append(string)
 
-    print(rotations)
-
     return rotations
 
 
@@ -19,8 +17,9 @@ def lsd_radix_sort(strings):
     string_length = len(strings[0])
     n_strings = len(strings)
 
-    # Counting sort
+    # Reorder the strings starting from the least significant digit
     for i in range(string_length - 1, -1, -1):
+        # Counting sort
         counters = [0] * 256
         result = [""] * n_strings
 
@@ -32,25 +31,25 @@ def lsd_radix_sort(strings):
         for j in range(1, 256):
             counters[j] += counters[j - 1]
 
-        # Order in reverse (mantaining stability)
+        # Order in reverse (in order to mantain stability)
         for s in reversed(strings):
             char_code = ord(s[i])
             counters[char_code] -= 1
             result[counters[char_code]] = s
 
-        print(result)
-
+        # Update the strings list
         strings = result
 
     return strings
 
 
-# Take the last character of each sorted rotation
+# Get the BWT
 def get_transform(rotations: list) -> str:
     transform = ""
-    
-    for temp in rotations:
-        transform += temp[-1]
+
+    # Take the last character of each sorted rotation    
+    for s in rotations:
+        transform += s[-1]
 
     return transform
 
@@ -61,12 +60,6 @@ def bwt_encode(string: str):
     string += '$'
 
     rotations = calculate_rotations(string)
-
     rotations = lsd_radix_sort(rotations)
     
     return get_transform(rotations)
-
-
-if __name__ == "__main__":
-    print(bwt_encode("banana"))
-    # lsd_radix_sort(["zuwu", "auwu", "euss"])
