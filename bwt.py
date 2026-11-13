@@ -11,6 +11,23 @@ def calculate_rotations(string: str) -> list:
 
     return rotations
 
+# Partial counting sort
+def get_cumulative_counts(string: str):
+    length = len(string)
+
+    counts = [0] * 256
+
+    # Count frequencies
+    for c in string:
+        counts[ord(c)] += 1
+
+    # Get cumulative indexes
+    for i in range(1, 256):
+        counts[i] += counts[i - 1]
+
+    # Return cumulative indexes
+    return counts
+
 
 # Sort rotations lexicographically (through LSD radix sort)
 def lsd_radix_sort(strings):
@@ -19,23 +36,19 @@ def lsd_radix_sort(strings):
 
     # Reorder the strings starting from the least significant digit
     for i in range(string_length - 1, -1, -1):
+        # Save the i-th column as a temporary string
+        column = [s[i] for s in strings]
+
         # Counting sort
-        counters = [0] * 256
+        counts = get_cumulative_counts(column)
+
         result = [""] * n_strings
-
-        # Count frequencies
-        for s in strings:
-            counters[ord(s[i])] += 1
-
-        # Get cumulative indexes
-        for j in range(1, 256):
-            counters[j] += counters[j - 1]
 
         # Order in reverse (in order to mantain stability)
         for s in reversed(strings):
-            char_code = ord(s[i])
-            counters[char_code] -= 1
-            result[counters[char_code]] = s
+            char = ord(s[i])
+            counts[char] -= 1
+            result[counts[char]] = s
 
         # Update the strings list
         strings = result
@@ -47,7 +60,7 @@ def lsd_radix_sort(strings):
 def get_transform(rotations: list) -> str:
     transform = ""
 
-    # Take the last character of each sorted rotation    
+    # Take the last character of each sorted rotation
     for s in rotations:
         transform += s[-1]
 
@@ -61,5 +74,33 @@ def bwt_encode(string: str):
 
     rotations = calculate_rotations(string)
     rotations = lsd_radix_sort(rotations)
-    
+
     return get_transform(rotations)
+
+# Decode a string encoded in BWT
+def bwt_decode(last_column: str):
+    # String length
+    length = len(last_column)
+
+    # Lexicographically ordered string
+    first_column = [""] * length
+
+    # Original string
+    reversed = [""] * length
+
+    # Lexicographically order given string
+    # Counting sort
+    counts = get_cumulative_counts(last_column)
+
+    # Order in reverse (in order to mantain stability)
+    for c in reversed(last_column):
+        code = ord(c)
+        counts[code] -= 1
+        first_column[counts[code]] = c
+
+    for i in range(length):
+        ...
+
+
+if __name__ == "__main__":
+    print(bwt_encode("banana"))
