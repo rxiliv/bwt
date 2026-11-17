@@ -1,6 +1,5 @@
 # --- Burrows-Wheeler Transform Algorithm ---
 
-
 # Calculate all the possible combination of shifts to the right
 def calculate_rotations(string: str) -> list:
     rotations = [string]

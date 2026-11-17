@@ -14,18 +14,28 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
 
     # Get server to listen
     server.listen(3)
+    print(f"Server listening on {IP}:{PORT}...")
 
-    # Accept client request and get client socket data
-    conn, addr = server.accept()
+    # Main server loop
+    while True:
+        # Accept client request and get client socket data
+        conn, addr = server.accept()
+        print(f"Request accepted from client {addr[0]}:{addr[1]}")
 
-    # Receive client message
-    data = server.recv(1024)
+        with conn:
+            # Receive client message
+            data = conn.recv(1024)
+            if not data:
+                continue
 
-    # Print request message
-    print("Request message:", data.decode())
+            # Decode data
+            decoded_data = data.decode()
 
-    # Encode message in BWT
-    data = bwt.bwt_encode(data)
+            # Print request message
+            print("Request message:", decoded_data)
 
-    # Send response message
-    conn.sendall(data)
+            # Encode message in BWT
+            encoded_data = bwt.bwt_encode(decoded_data)
+
+            # Send response message
+            conn.sendall(encoded_data.encode())

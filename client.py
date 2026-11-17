@@ -6,13 +6,15 @@ import socket
 IP = "127.0.0.1"
 PORT = 5000
 
-# String to encode
-message = input("Insert the string to encode with BWT:")
-
 # Open client socket (closes automatically)
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
     # Connect to server
+    print("Connecting to server...")
     client.connect((IP, PORT))
+    print("Connected!")
+
+    # Get string to encode in input
+    message = input("Insert the string to encode with BWT: ")
 
     # Send message
     client.sendall(message.encode())
