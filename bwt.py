@@ -1,48 +1,52 @@
 # --- Burrows-Wheeler Transform Algorithm ---
 
+# Constants
+ASCII_SIZE = 256
+
+
 # Calculate all the possible combination of shifts to the right
-def calculate_shifts(string: str) -> list:
-    shifts = [string]
+def generate_rotations(string: str) -> list[str]:
+    rotations = [string]
 
     while string[0] != '$':
         string = string[1::] + string[0]
-        shifts.append(string)
+        rotations.append(string)
 
-    return shifts
+    return rotations
 
 
 # Get characters cumulative counts in a string
-def get_cumulative_counts(string: str):
-    counts = [0] * 256
+def calculate_cumulative_counts(string: str) -> list[int]:
+    counts = [0] * ASCII_SIZE
 
     # Count frequencies
     for c in string:
         counts[ord(c)] += 1
 
     # Get cumulative indexes
-    for i in range(1, 256):
+    for i in range(1, ASCII_SIZE):
         counts[i] += counts[i - 1]
 
     # Return cumulative indexes
     return counts
 
 
-# Sort shifts lexicographically (through LSD radix sort)
-def lsd_radix_sort(strings):
-    string_length = len(strings[0])
+# Sort rotations lexicographically (through LSD radix sort)
+def radix_sort_lsd(strings: list[str]) -> list[str]:
+    rotation_length = len(strings[0])
     n_strings = len(strings)
 
     # Reorder the strings starting from the least significant digit
-    for i in range(string_length - 1, -1, -1):
+    for i in range(rotation_length - 1, -1, -1):
         # Save the i-th column as a temporary string
-        column = [s[i] for s in strings]
+        column = [string[i] for string in strings]
 
         # Counting sort
-        counts = get_cumulative_counts(column)
+        counts = calculate_cumulative_counts(column)
 
         result = [""] * n_strings
 
-        # Order in reverse (in order to mantain stability)
+        # Reverse iteration preserves counting sort stability
         for s in reversed(strings):
             char = ord(s[i])
             counts[char] -= 1
@@ -55,37 +59,39 @@ def lsd_radix_sort(strings):
 
 
 # Encode a string through BWT
-def bwt_encode(string: str):
+def bwt_encode(string: str) -> str:
     # Add '$' at the end of the string
     string += '$'
 
-    shifts = calculate_shifts(string)
-    shifts = lsd_radix_sort(shifts)
+    rotations = generate_rotations(string)
+    rotations = radix_sort_lsd(rotations)
 
-    return "".join(s[-1] for s in shifts)
+    # Join the last character of each rotation in one string
+    string = "".join(rotation[-1] for rotation in rotations)
+
+    return string
 
 
 # Decode a string encoded in BWT
-def bwt_decode(last_column: str):
-    # String length
+def bwt_decode(last_column: str) -> str:
     length = len(last_column)
 
     # Find first occurences positions of the given string
-    cumulative = get_cumulative_counts(last_column)
+    cumulative_counts = calculate_cumulative_counts(last_column)
 
     # Create index jumps map
-    next_indexes = [0] * length
-    current_counts = [0] * 256
+    next_indices = [0] * length
+    character_ranks = [0] * ASCII_SIZE
 
     # Get characters ranks
     for i, c in enumerate(last_column):
         code = ord(c)
-        rank = current_counts[code]
-        current_counts[code] += 1
+        rank = character_ranks[code]
+        character_ranks[code] += 1
 
         # Find start index in first column
-        start = cumulative[code - 1] if code > 0 else 0
-        next_indexes[i] = start + rank
+        start = cumulative_counts[code - 1] if code > 0 else 0
+        next_indices[i] = start + rank
 
     # Build the reversed string from '$'
     current_index = last_column.index('$')
@@ -93,6 +99,6 @@ def bwt_decode(last_column: str):
 
     for _ in range(length):
         result.append(last_column[current_index])
-        current_index = next_indexes[current_index]
+        current_index = next_indices[current_index]
 
     return "".join(reversed(result))
