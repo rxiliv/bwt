@@ -11,10 +11,9 @@ def calculate_rotations(string: str) -> list:
 
     return rotations
 
-# Partial counting sort
-def get_cumulative_counts(string: str):
-    length = len(string)
 
+# Get characters cumulative counts in a string
+def get_cumulative_counts(string: str):
     counts = [0] * 256
 
     # Count frequencies
@@ -56,17 +55,6 @@ def lsd_radix_sort(strings):
     return strings
 
 
-# Get the BWT
-def get_transform(rotations: list) -> str:
-    transform = ""
-
-    # Take the last character of each sorted rotation
-    for s in rotations:
-        transform += s[-1]
-
-    return transform
-
-
 # Encode a string through BWT
 def bwt_encode(string: str):
     # Add '$' at the end of the string
@@ -75,32 +63,39 @@ def bwt_encode(string: str):
     rotations = calculate_rotations(string)
     rotations = lsd_radix_sort(rotations)
 
-    return get_transform(rotations)
+    string = "".join(s[-1] for s in rotations)
+
+    return string
+
 
 # Decode a string encoded in BWT
 def bwt_decode(last_column: str):
     # String length
     length = len(last_column)
 
-    # Lexicographically ordered string
-    first_column = [""] * length
+    # Find first occurences positions of the given string
+    cumulative = get_cumulative_counts(last_column)
 
-    # Original string
-    reversed = [""] * length
+    # Create index jumps map
+    next_indexes = [0] * length
+    current_counts = [0] * 256
 
-    # Lexicographically order given string
-    # Counting sort
-    counts = get_cumulative_counts(last_column)
-
-    # Order in reverse (in order to mantain stability)
-    for c in reversed(last_column):
+    # Get characters ranks
+    for i, c in enumerate(last_column):
         code = ord(c)
-        counts[code] -= 1
-        first_column[counts[code]] = c
+        rank = current_counts[code]
+        current_counts[code] += 1
 
-    for i in range(length):
-        ...
+        # Find start index in first column
+        start = cumulative[code - 1] if code > 0 else 0
+        next_indexes[i] = start + rank
 
+    # Build the reversed string from '$'
+    current_index = last_column.index('$')
+    result = []
 
-if __name__ == "__main__":
-    print(bwt_encode("banana"))
+    for _ in range(length):
+        result.append(last_column[current_index])
+        current_index = next_indexes[current_index]
+
+    return "".join(reversed(result))
