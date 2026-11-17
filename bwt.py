@@ -1,11 +1,21 @@
-# --- Burrows-Wheeler Transform Algorithm ---
-
 # Constants
 ASCII_SIZE = 256
 
 
-# Calculate all the possible combination of shifts to the right
+
+# --- Helper Functions ---
+
 def generate_rotations(string: str) -> list[str]:
+    """
+    Generates all cyclic rotations of a string by repeatedly shifting
+    its first character to the end, until '$' becomes the first character.
+
+    Args:
+        string (str): The input string, which must end with '$'.
+
+    Returns:
+        list: A list containing all cyclic rotations of the input string.
+    """
     rotations = [string]
 
     while string[0] != '$':
@@ -15,31 +25,89 @@ def generate_rotations(string: str) -> list[str]:
     return rotations
 
 
-# Get characters cumulative counts in a string
 def calculate_cumulative_counts(string: str) -> list[int]:
+    """
+    Calculates the cumulative frequency of each ASCII character (0-255).
+
+    First counts the occurrences of each character, then converts the
+    frequencies into cumulative counts, representing the ending indexes
+    of each character in a sorted sequence.
+
+    Args:
+        string (str): The input string to analyze.
+
+    Returns:
+        list: A list of 256 cumulative character counts.
+    """
     counts = [0] * ASCII_SIZE
 
     # Count frequencies
-    for c in string:
-        counts[ord(c)] += 1
+    for char in string:
+        counts[ord(char)] += 1
 
     # Get cumulative indexes
-    for i in range(1, ASCII_SIZE):
-        counts[i] += counts[i - 1]
+    for index in range(1, ASCII_SIZE):
+        counts[index] += counts[index - 1]
 
     # Return cumulative indexes
     return counts
 
 
-# Sort rotations lexicographically (through LSD radix sort)
+def generate_next_indices(last_column: str) -> list[int]:
+    """
+    Generates the mapping between character positions in the last
+    and first columns of the BWT matrix.
+
+    Args:
+        last_column: The BWT-encoded string.
+
+    Returns:
+        A list mapping each position to its corresponding position
+        in the first column.
+    """
+    length = len(last_column)
+
+    cumulative_counts = calculate_cumulative_counts(last_column)
+
+    next_indices = [0] * length
+    character_ranks = [0] * ASCII_SIZE
+
+    # Calculate characters ranks
+    for index, char in enumerate(last_column):
+        code = ord(char)
+        rank = character_ranks[code]
+        character_ranks[code] += 1
+
+        start = cumulative_counts[code - 1] if code > 0 else 0
+        next_indices[index] = start + rank
+
+    return next_indices
+
+
+
+# --- Sorting Algorithms ---
+
 def radix_sort_lsd(strings: list[str]) -> list[str]:
+    """
+    Sorts a list of strings lexicographically using LSD (Least
+    Significant Digit) Radix Sort with Counting Sort.
+
+    Processes characters from right to left, maintaining sorting
+    stability at each iteration.
+
+    Args:
+        strings (list): A list of strings of equal length to sort.
+
+    Returns:
+        list: The lexicographically sorted list of strings.
+    """
     rotation_length = len(strings[0])
     n_strings = len(strings)
 
     # Reorder the strings starting from the least significant digit
-    for i in range(rotation_length - 1, -1, -1):
+    for index in range(rotation_length - 1, -1, -1):
         # Save the i-th column as a temporary string
-        column = [string[i] for string in strings]
+        column = [string[index] for string in strings]
 
         # Counting sort
         counts = calculate_cumulative_counts(column)
@@ -47,10 +115,10 @@ def radix_sort_lsd(strings: list[str]) -> list[str]:
         result = [""] * n_strings
 
         # Reverse iteration preserves counting sort stability
-        for s in reversed(strings):
-            char = ord(s[i])
+        for string in reversed(strings):
+            char = ord(string[index])
             counts[char] -= 1
-            result[counts[char]] = s
+            result[counts[char]] = string
 
         # Update the strings list
         strings = result
@@ -58,8 +126,23 @@ def radix_sort_lsd(strings: list[str]) -> list[str]:
     return strings
 
 
-# Encode a string through BWT
+
+# --- Burrows-Wheeler Transform ---
+
 def bwt_encode(string: str) -> str:
+    """
+    Encodes a string using the Burrows-Wheeler Transform (BWT).
+
+    Appends the '$' end-of-string marker, generates all cyclic rotations,
+    sorts them lexicographically, and extracts the last character
+    of each sorted rotation.
+
+    Args:
+        string (str): The input string to encode.
+
+    Returns:
+        str: The Burrows-Wheeler transformed string.
+    """
     # Add '$' at the end of the string
     string += '$'
 
@@ -72,33 +155,32 @@ def bwt_encode(string: str) -> str:
     return string
 
 
-# Decode a string encoded in BWT
 def bwt_decode(last_column: str) -> str:
-    length = len(last_column)
+    """
+    Decodes a Burrows-Wheeler transformed string to reconstruct
+    the original input string.
 
-    # Find first occurences positions of the given string
-    cumulative_counts = calculate_cumulative_counts(last_column)
+    Uses cumulative character counts and occurrence ranks to build
+    a mapping between character positions in the last and first
+    columns of the sorted rotation matrix.
 
-    # Create index jumps map
-    next_indices = [0] * length
-    character_ranks = [0] * ASCII_SIZE
+    Args:
+        last_column (str): The BWT-encoded string, including '$'.
 
-    # Get characters ranks
-    for i, c in enumerate(last_column):
-        code = ord(c)
-        rank = character_ranks[code]
-        character_ranks[code] += 1
+    Returns:
+        str: The original string, without the '$' end-of-string marker.
+    """
+    # Generate mapping positions between first and last column
+    next_indices = generate_next_indices(last_column)
 
-        # Find start index in first column
-        start = cumulative_counts[code - 1] if code > 0 else 0
-        next_indices[i] = start + rank
-
-    # Build the reversed string from '$'
+    # Build the reversed string starting from '$'
     current_index = last_column.index('$')
     result = []
 
-    for _ in range(length):
+    for _ in range(len(last_column)):
         result.append(last_column[current_index])
         current_index = next_indices[current_index]
 
-    return "".join(reversed(result))
+    result = "".join(reversed(result))
+
+    return result
