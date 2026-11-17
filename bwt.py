@@ -1,14 +1,14 @@
 # --- Burrows-Wheeler Transform Algorithm ---
 
 # Calculate all the possible combination of shifts to the right
-def calculate_rotations(string: str) -> list:
-    rotations = [string]
+def calculate_shifts(string: str) -> list:
+    shifts = [string]
 
     while string[0] != '$':
         string = string[1::] + string[0]
-        rotations.append(string)
+        shifts.append(string)
 
-    return rotations
+    return shifts
 
 
 # Get characters cumulative counts in a string
@@ -27,7 +27,7 @@ def get_cumulative_counts(string: str):
     return counts
 
 
-# Sort rotations lexicographically (through LSD radix sort)
+# Sort shifts lexicographically (through LSD radix sort)
 def lsd_radix_sort(strings):
     string_length = len(strings[0])
     n_strings = len(strings)
@@ -59,12 +59,10 @@ def bwt_encode(string: str):
     # Add '$' at the end of the string
     string += '$'
 
-    rotations = calculate_rotations(string)
-    rotations = lsd_radix_sort(rotations)
+    shifts = calculate_shifts(string)
+    shifts = lsd_radix_sort(shifts)
 
-    string = "".join(s[-1] for s in rotations)
-
-    return string
+    return "".join(s[-1] for s in shifts)
 
 
 # Decode a string encoded in BWT
