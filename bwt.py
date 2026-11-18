@@ -18,14 +18,14 @@ def generate_rotations(string: str) -> list[str]:
     """
     rotations = [string]
 
-    while string[0] != '$':
-        string = string[1::] + string[0]
+    for _ in range(len(string)):
+        string = string[1:] + string[0]
         rotations.append(string)
 
     return rotations
 
 
-def calculate_cumulative_counts(string: str) -> list[int]:
+def calculate_cumulative_counts(string: str | list[str]) -> list[int]:
     """
     Calculates the cumulative frequency of each ASCII character (0-255).
 
@@ -45,11 +45,10 @@ def calculate_cumulative_counts(string: str) -> list[int]:
     for char in string:
         counts[ord(char)] += 1
 
-    # Get cumulative indexes
+    # Calculate cumulative indexes
     for index in range(1, ASCII_SIZE):
         counts[index] += counts[index - 1]
 
-    # Return cumulative indexes
     return counts
 
 
@@ -70,13 +69,13 @@ def generate_next_indices(last_column: str) -> list[int]:
     cumulative_counts = calculate_cumulative_counts(last_column)
 
     next_indices = [0] * length
-    character_ranks = [0] * ASCII_SIZE
+    occurrence_counts = [0] * ASCII_SIZE
 
-    # Calculate characters ranks
+    # Calculate occurrence counts
     for index, char in enumerate(last_column):
         code = ord(char)
-        rank = character_ranks[code]
-        character_ranks[code] += 1
+        rank = occurrence_counts[code]
+        occurrence_counts[code] += 1
 
         start = cumulative_counts[code - 1] if code > 0 else 0
         next_indices[index] = start + rank
@@ -150,9 +149,9 @@ def bwt_encode(string: str) -> str:
     rotations = radix_sort_lsd(rotations)
 
     # Join the last character of each rotation in one string
-    string = "".join(rotation[-1] for rotation in rotations)
+    last_column = "".join(rotation[-1] for rotation in rotations)
 
-    return string
+    return last_column
 
 
 def bwt_decode(last_column: str) -> str:
