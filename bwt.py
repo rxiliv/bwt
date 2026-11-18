@@ -77,7 +77,7 @@ def generate_next_indices(last_column: str) -> list[int]:
         last_column: The BWT-encoded string.
 
     Returns:
-        A list mapping each position to its corresponding position
+        list: A list mapping each position to its corresponding position
         in the first column.
     """
     length = len(last_column)
@@ -181,9 +181,9 @@ def bwt_decode(last_column: str) -> str:
     Decodes a Burrows-Wheeler transformed string to reconstruct
     the original input string.
 
-    Uses cumulative character counts and occurrence ranks to build
-    a mapping between character positions in the last and first
-    columns of the sorted rotation matrix.
+    Reconstructs the original string by traversing the mapping
+    between character positions in the last and first columns
+    of the sorted rotation matrix.
 
     Args:
         last_column (str): The BWT-encoded string, including '$'.
