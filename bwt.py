@@ -1,9 +1,25 @@
 # Constants
-ASCII_SIZE = 256
+CHARACTER_SET_SIZE = 256
 
 
 
 # --- Helper Functions ---
+
+def validate_character_range(string: str) -> None:
+    """
+    Validates that all characters in a string belong to the supported
+    ASCII character range (0-255).
+
+    Args:
+        string (str): The input string to validate.
+
+    Raises:
+        ValueError: If the string contains a character outside the
+                    supported ASCII range.
+    """
+    if any(ord(char) >= CHARACTER_SET_SIZE for char in string):
+        raise ValueError("Input must contain only ASCII characters.")
+
 
 def generate_rotations(string: str) -> list[str]:
     """
@@ -39,14 +55,14 @@ def calculate_cumulative_counts(string: str | list[str]) -> list[int]:
     Returns:
         list: A list of 256 cumulative character counts.
     """
-    counts = [0] * ASCII_SIZE
+    counts = [0] * CHARACTER_SET_SIZE
 
     # Count frequencies
     for char in string:
         counts[ord(char)] += 1
 
     # Calculate cumulative indexes
-    for index in range(1, ASCII_SIZE):
+    for index in range(1, CHARACTER_SET_SIZE):
         counts[index] += counts[index - 1]
 
     return counts
@@ -69,7 +85,7 @@ def generate_next_indices(last_column: str) -> list[int]:
     cumulative_counts = calculate_cumulative_counts(last_column)
 
     next_indices = [0] * length
-    occurrence_counts = [0] * ASCII_SIZE
+    occurrence_counts = [0] * CHARACTER_SET_SIZE
 
     # Calculate occurrence counts
     for index, char in enumerate(last_column):
@@ -142,6 +158,12 @@ def bwt_encode(string: str) -> str:
     Returns:
         str: The Burrows-Wheeler transformed string.
     """
+
+    # Input validation
+    if '$' in string:
+        raise ValueError("Input string cannot contain '$'.")
+    validate_character_range();
+
     # Add '$' at the end of the string
     string += '$'
 
@@ -169,6 +191,9 @@ def bwt_decode(last_column: str) -> str:
     Returns:
         str: The original string, without the '$' end-of-string marker.
     """
+    # Input validation
+    validate_character_range();
+
     # Generate mapping positions between first and last column
     next_indices = generate_next_indices(last_column)
 
