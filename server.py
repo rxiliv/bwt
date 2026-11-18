@@ -28,14 +28,24 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
             if not data:
                 continue
 
-            # Decode data
-            decoded_data = data.decode()
+            raw_message = data.decode()
+            print("Request message:", raw_message)
 
-            # Print request message
-            print("Request message:", decoded_data)
+            # Determine operation based on prefix protocol
+            if raw_message.startswith("ENC:"):
+                text_to_process = raw_message[4:]
+                print(f"Action: BWT Encode")
+                result = bwt.bwt_encode(text_to_process)
+            elif raw_message.startswith("DEC:"):
+                text_to_process = raw_message[4:]
+                print(f"Action: BWT Decode")
+                result = bwt.bwt_decode(text_to_process)
+            else:
+                result = "Error: Unknown operation command."
 
-            # Encode message in BWT
-            encoded_data = bwt.bwt_encode(decoded_data)
+            # Send response message (ensure it's bytes)
+            if isinstance(result, str):
+                result = result.encode()
 
-            # Send response message
-            conn.sendall(encoded_data.encode())
+            conn.sendall(result)
+            print("Response sent.")
