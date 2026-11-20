@@ -1,99 +1,99 @@
-### Gioia Chen 5BT-i
+   ### Gioia Chen 5BT-i
 Istituto di Istruzione Superiore "Archimede" - Treviglio
 
 # Burrows-Wheeler Transform (BWT)
 
-Implementazione in Python dell'algoritmo della Trasformata di Burrows-Wheeler (BWT), abbinato all'algoritmo di ordinamento **LSD Radix Sort** con Counting Sort e integrato in un'architettura di rete **Client-Server** basata su socket TCP.
+Python implementation of the Burrows-Wheeler Transform (BWT) algorithm, paired with the **LSD Radix Sort** sorting algorithm using Counting Sort and integrated into a **Client-Server** network architecture based on TCP sockets.
 
-## Contenuti
-- [Descrizione del progetto](#descrizione-del-progetto)
-- [Struttura della repository](#struttura-della-repository)
-- [Requisiti](#requisiti)
-- [Funzionamento dell'algoritmo](#funzionamento-dellalgoritmo)
-- [Architettura Client-Server e protocollo](#architettura-client-server-e-protocollo)
-- [Utilizzo](#utilizzo)
-- [Esempio di esecuzione](#esempio-di-esecuzione)
-- [Limiti noti](#limiti-noti)
-
----
-
-## Descrizione del progetto
-
-La Trasformata di Burrows-Wheeler (ideata nel 1994 da Michael Burrows e David Wheeler) riorganizza una stringa di caratteri in modo reversibile raggruppando insieme simboli uguali. Questa proprietà la rende particolarmente utile come fase preliminare per algoritmi di compressione senza perdita di dati (come `bzip2`) e per l'indicizzazione e il sequenziamento di dati genomici (in combinazione con l'FM-index).
-
-Il progetto separa la logica algoritmica dall'interfaccia utente tramite un modello Client-Server in esecuzione locale (loopback).
+## Contents
+- [Project Description](#project-description)
+- [Repository Structure](#repository-structure)
+- [Requirements](#requirements)
+- [How the Algorithm Works](#how-the-algorithm-works)
+- [Client-Server Architecture and Protocol](#client-server-architecture-and-protocol)
+- [Usage](#usage)
+- [Execution Example](#execution-example)
+- [Known Limitations](#known-limitations)
 
 ---
 
-## Struttura della repository
+## Project Description
 
-| File | Descrizione |
+The Burrows-Wheeler Transform (invented in 1994 by Michael Burrows and David Wheeler) reversibly rearranges a character string by grouping identical symbols together. This property makes it particularly useful as a preprocessing step for lossless data compression algorithms (such as `bzip2`) and for indexing and sequencing genomic data (in combination with the FM-index).
+
+The project separates the algorithmic logic from the user interface through a Client-Server model running locally (loopback).
+
+---
+
+## Repository Structure
+
+| File | Description |
 | :--- | :--- |
-| `bwt.py` | Modulo principale contenente le funzioni di codifica (`bwt_encode`), decodifica (`bwt_decode`), ordinamento (`radix_sort_lsd`) e le funzioni di supporto. |
-| `server.py` | Server TCP che importa il modulo `bwt`, rimane in ascolto sulla porta `5000` ed elabora le richieste di codifica e decodifica. |
-| `client.py` | Client CLI che si connette al server, acquisisce l'operazione e la stringa dall'utente e visualizza il risultato. |
-| `README.md` | Documentazione del progetto. |
+| `bwt.py` | Main module containing the encoding (`bwt_encode`), decoding (`bwt_decode`), and sorting (`radix_sort_lsd`) functions, along with helper functions. |
+| `server.py` | TCP server that imports the `bwt` module, listens on port `5000`, and processes encoding and decoding requests. |
+| `client.py` | CLI client that connects to the server, gets the operation and string from the user, and displays the result. |
+| `README.md` | Project documentation. |
 
 ---
 
-## Requisiti
+## Requirements
 
-- **Python 3.10+** (sviluppato e testato con Python 3.14.3)
-- Nessuna libreria esterna richiesta: il progetto utilizza esclusivamente la libreria standard di Python (`socket`).
+- **Python 3.10+** (developed and tested with Python 3.14.3)
+- No external libraries required: the project uses only the Python standard library (`socket`).
 
 ---
 
-## Funzionamento dell'algoritmo
+## How the Algorithm Works
 
-Il modulo `bwt.py` è suddiviso in tre sezioni principali:
+The `bwt.py` module is divided into three main sections:
 
 1. **Burrows-Wheeler Transform**
-   - `bwt_encode(string)`: valida l'input (solo caratteri ASCII estesi 0-255, assenza del carattere sentinella `$`), aggiunge `$` alla fine della stringa, genera tutte le rotazioni cicliche, le ordina lessicograficamente ed estrae l'ultima colonna.
-   - `bwt_decode(last_column)`: ricostruisce la stringa originale a partire dall'ultima colonna utilizzando la mappatura tra ultima e prima colonna della matrice BWT, partendo dal terminatore `$`.
+   - `bwt_encode(string)`: validates the input (extended ASCII characters 0-255 only, no `$` sentinel character), appends `$` to the end of the string, generates all cyclic rotations, sorts them lexicographically, and extracts the last column.
+   - `bwt_decode(last_column)`: reconstructs the original string from the last column using the mapping between the last and first columns of the BWT matrix, starting from the `$` terminator.
 2. **Sorting Algorithm**
-   - `radix_sort_lsd(strings)`: ordina lessicograficamente le rotazioni cicliche procedendo dall'ultima colonna alla prima (Least Significant Digit) tramite Counting Sort stabile su alfabeto ASCII esteso ($k = 256$).
+   - `radix_sort_lsd(strings)`: lexicographically sorts the cyclic rotations from the last column to the first (Least Significant Digit) using a stable Counting Sort over an extended ASCII alphabet ($k = 256$).
 3. **Helper Functions**
-   - `validate_character_range(string)`: verifica che tutti i caratteri rientrino nell'intervallo ASCII esteso (0-255).
-   - `generate_rotations(string)`: genera tutte le rotazioni cicliche della stringa.
-   - `calculate_cumulative_counts(string)`: calcola le frequenze cumulative dei caratteri.
-   - `generate_next_indices(last_column)`: costruisce la mappatura tra le posizioni dei caratteri dell'ultima colonna e quelle della prima.
+   - `validate_character_range(string)`: checks that all characters fall within the extended ASCII range (0-255).
+   - `generate_rotations(string)`: generates all cyclic rotations of the string.
+   - `calculate_cumulative_counts(string)`: calculates the cumulative frequencies of characters.
+   - `generate_next_indices(last_column)`: builds the mapping between character positions in the last column and those in the first column.
 
 ---
 
-## Architettura Client-Server e protocollo
+## Client-Server Architecture and Protocol
 
-La comunicazione avviene tramite socket IPv4 (`socket.AF_INET`) e protocollo TCP (`socket.SOCK_STREAM`) sull'indirizzo `127.0.0.1` alla porta `5000`.
+Communication takes place via IPv4 sockets (`socket.AF_INET`) and the TCP protocol (`socket.SOCK_STREAM`) on address `127.0.0.1` at port `5000`.
 
-Per coordinare lo scambio di messaggi è definito un protocollo testuale basato su prefissi di 4 caratteri:
+To coordinate message exchange, a text-based protocol using 4-character prefixes is defined:
 
-| Prefisso | Operazione | Funzione eseguita dal Server | Risposta |
+| Prefix | Operation | Function Executed by Server | Response |
 | :--- | :--- | :--- | :--- |
-| `ENC:` | Codifica BWT | `bwt.bwt_encode()` | Stringa codificata (con terminatore `$`) |
-| `DEC:` | Decodifica BWT | `bwt.bwt_decode()` | Stringa originale ricostruita |
-| *Altro* | Comando non valido | Nessuna | `Error: Unknown operation command.` |
+| `ENC:` | BWT Encoding | `bwt.bwt_encode()` | Encoded string (with `$` terminator) |
+| `DEC:` | BWT Decoding | `bwt.bwt_decode()` | Reconstructed original string |
+| *Other* | Invalid command | None | `Error: Unknown operation command.` |
 
 ---
 
-## Utilizzo
+## Usage
 
-1. Aprire un primo terminale e avviare il server:
+1. Open a first terminal and start the server:
    ```bash
    python server.py
    ```
-   Il server si metterà in ascolto su `127.0.0.1:5000`.
+   The server will start listening on `127.0.0.1:5000`.
 
-2. Aprire un secondo terminale e avviare il client:
+2. Open a second terminal and start the client:
    ```bash
    python client.py
    ```
 
-3. Seguire le istruzioni a schermo per scegliere se codificare (`E`) o decodificare (`D`) e inserire la stringa desiderata.
+3. Follow the on-screen instructions to choose whether to encode (`E`) or decode (`D`) and enter the desired string.
 
 ---
 
-## Esempio di esecuzione
+## Execution Example
 
-**Codifica:**
+**Encoding:**
 ```text
 Connecting to server...
 Connected!
@@ -102,7 +102,7 @@ Insert the string: banana
 Response message: annb$aa
 ```
 
-**Decodifica:**
+**Decoding:**
 ```text
 Connecting to server...
 Connected!
@@ -113,8 +113,8 @@ Response message: banana
 
 ---
 
-## Limiti noti
+## Known Limitations
 
-- **Set di caratteri**: sono supportati solo caratteri ASCII estesi (codici 0-255); la stringa da codificare non può contenere il carattere `$`, riservato come marcatore di fine stringa.
-- **Dimensione massima del messaggio**: la lettura tramite `recv(1024)` limita la dimensione del singolo payload a 1024 byte (incluso il prefisso di comando).
-- **Concorrenza**: il server gestisce le richieste in modo sequenziale (una connessione alla volta, con coda massima di 3 richieste pendenti).
+- **Character set**: only extended ASCII characters (codes 0-255) are supported; the string to encode cannot contain the `$` character, which is reserved as an end-of-string marker.
+- **Maximum message size**: reading via `recv(1024)` limits the size of a single payload to 1024 bytes (including the command prefix).
+- **Concurrency**: the server handles requests sequentially (one connection at a time, with a maximum queue of 3 pending requests).
